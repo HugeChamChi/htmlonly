@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KRAFTON Countdown</title>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: radial-gradient(ellipse at center, #2a0a3a 0%, #0d0010 60%, #000000 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+  .circle-container {
+    position: relative;
+    width: 480px;
+    height: 480px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ring {
+    position: absolute;
+    inset: 0;
+    animation: rotateFull 4s linear infinite;
+    transform-origin: center center;
+  }
+  .ring svg { width: 100%; height: 100%; }
+  @keyframes rotateFull {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  .ring-circle {
+    fill: none;
+    stroke-width: 3.5;
+    stroke-linecap: round;
+  }
+  .inner-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .title-line {
+    width: 70px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #f472b6, transparent);
+  }
+  .krafton-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 62px;
+    color: #ffffff;
+    letter-spacing: 0.12em;
+    line-height: 1;
+    text-shadow: 0 0 24px rgba(244, 114, 182, 0.7);
+  }
+  .countdown-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-top: 8px;
+  }
+  .flip-unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .flip-cards { display: flex; gap: 3px; }
+  .flip-card {
+    width: 54px;
+    height: 70px;
+    perspective: 300px;
+  }
+  .card-face {
+    width: 100%;
+    height: 100%;
+    background: #1a0a28;
+    border: 0.5px solid rgba(244, 114, 182, 0.35);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 46px;
+    font-family: 'Lilita One', cursive;
+    color: #ffffff;
+    position: relative;
+    overflow: hidden;
+  }
+  .card-face::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; top: 50%;
+    height: 0.5px;
+    background: rgba(244, 114, 182, 0.25);
+  }
+  .unit-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    color: rgba(244, 114, 182, 0.8);
+    text-transform: uppercase;
+    font-family: sans-serif;
+  }
+  .flip-sep {
+    font-size: 36px;
+    color: rgba(244, 114, 182, 0.5);
+    line-height: 70px;
+    font-family: 'Lilita One', cursive;
+  }
+  .flipping {
+    animation: flipDown 0.35s ease-in-out;
+  }
+  @keyframes flipDown {
+    0%   { transform: rotateX(0deg); opacity: 1; }
+    45%  { transform: rotateX(-90deg); opacity: 0.2; }
+    55%  { transform: rotateX(-90deg); opacity: 0.2; }
+    100% { transform: rotateX(0deg); opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="circle-container">
+  <div class="ring">
+    <svg viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="ringGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%"   stop-color="#f472b6" stop-opacity="1"/>
+          <stop offset="40%"  stop-color="#c026d3" stop-opacity="0.7"/>
+          <stop offset="75%"  stop-color="#3b0047" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <circle class="ring-circle" cx="240" cy="240" r="225" stroke="url(#ringGrad)"/>
+    </svg>
+  </div>
+  <div class="inner-content">
+    <div class="title-line"></div>
+    <div class="krafton-title">KRAFTON</div>
+    <div class="title-line"></div>
+    <div class="countdown-row">
+      <div class="flip-unit">
+        <div class="flip-cards" id="days"></div>
+        <div class="unit-label">Days</div>
+      </div>
+      <div class="flip-sep">:</div>
+      <div class="flip-unit">
+        <div class="flip-cards" id="hours"></div>
+        <div class="unit-label">Hours</div>
+      </div>
+      <div class="flip-sep">:</div>
+      <div class="flip-unit">
+        <div class="flip-cards" id="minutes"></div>
+        <div class="unit-label">Minutes</div>
+      </div>
+      <div class="flip-sep">:</div>
+      <div class="flip-unit">
+        <div class="flip-cards" id="seconds"></div>
+        <div class="unit-label">Seconds</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const target = new Date('2026-05-18T00:00:00');
+  const prev = { days:'', hours:'', minutes:'', seconds:'' };
+  function pad(n,l){ return String(n).padStart(l,'0'); }
+  function renderCards(id, val, digits) {
+    const c = document.getElementById(id);
+    if (!c) return;
+    const str = pad(val, digits);
+    if (prev[id] === str) return;
+    c.innerHTML = '';
+    for (let i = 0; i < str.length; i++) {
+      const card = document.createElement('div');
+      card.className = 'flip-card';
+      const face = document.createElement('div');
+      face.className = 'card-face';
+      face.textContent = str[i];
+      if (prev[id] && prev[id][i] !== str[i]) face.classList.add('flipping');
+      card.appendChild(face);
+      c.appendChild(card);
+    }
+    prev[id] = str;
+  }
+  function update() {
+    const diff = target - new Date();
+    if (diff <= 0) return;
+    renderCards('days',    Math.floor(diff/86400000), 3);
+    renderCards('hours',   Math.floor((diff%86400000)/3600000), 2);
+    renderCards('minutes', Math.floor((diff%3600000)/60000), 2);
+    renderCards('seconds', Math.floor((diff%60000)/1000), 2);
+  }
+  update();
+  setInterval(update, 1000);
+</script>
+</body>
+</html>
